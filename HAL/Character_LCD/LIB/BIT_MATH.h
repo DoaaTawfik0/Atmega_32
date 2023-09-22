@@ -1,22 +1,16 @@
 /*****************************************************/
 /*****************************************************/
 /**************   Author: Doaa Tawfik  ***************/
-/**************   Layer: MCAL          ***************/
-/**************   SWC: DIO             ***************/
+/**************   Layer: LIBRARY       ***************/
 /**************   Version: 1.00        ***************/
 /*****************************************************/
 /*****************************************************/
+#ifndef BIT_MATH_H_
+#define BIT_MATH_H_
 
-
-#ifndef ERROR_STATE_H_
-#define ERROR_STATE_H_
-
-typedef enum
-{
-	ES_NOK ,
-	ES_OK ,
-	ES_NULL_POINTER,
-	ES_OUT_OF_RANGE
-}ES_t;
+#define SET_BIT(VAR , BIT_NUM) (VAR|=(1<<BIT_NUM))
+#define CLEAR_BIT(VAR , BIT_NUM) (VAR&=(~(1<<BIT_NUM)))
+#define TOGGLE_BIT(VAR , BIT_NUM) (VAR^=(1<<BIT_NUM))
+#define GET_BIT(VAR , BIT_NUM) (1&(VAR>>BIT_NUM))
 
 #endif
