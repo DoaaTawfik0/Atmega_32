@@ -1,24 +1,16 @@
 /*****************************************************/
 /*****************************************************/
 /**************   Author: Doaa Tawfik  ***************/
-/**************   Layer: HAL           ***************/
-/**************   SWC: Seven_Segment   ***************/
+/**************   Layer: LIBRARY       ***************/
 /**************   Version: 1.00        ***************/
 /*****************************************************/
 /*****************************************************/
+#ifndef BIT_MATH_H_
+#define BIT_MATH_H_
 
-#ifndef SEVEN_SEGMENT_PRIVATE_H_
-#define SEVEN_SEGMENT_PRIVATE_H_
-
-
-
-#define NOT_CONNECTED     0
-
-#define COMMON_CATHODE   1
-#define COMMON_ANODE     2
-
-
-
-
+#define SET_BIT(VAR , BIT_NUM) (VAR|=(1<<BIT_NUM))
+#define CLEAR_BIT(VAR , BIT_NUM) (VAR&=(~(1<<BIT_NUM)))
+#define TOGGLE_BIT(VAR , BIT_NUM) (VAR^=(1<<BIT_NUM))
+#define GET_BIT(VAR , BIT_NUM) (1&(VAR>>BIT_NUM))
 
 #endif
