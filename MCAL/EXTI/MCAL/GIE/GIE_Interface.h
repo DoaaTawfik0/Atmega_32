@@ -2,22 +2,18 @@
 /********************************************************/
 /**************   Author: Doaa Tawfik     ***************/
 /**************   Layer:  MCAL            ***************/
-/**************   SWC:    EXTI            ***************/
+/**************   SWC:    GIE             ***************/
 /**************   Version: 1.00           ***************/
 /********************************************************/
 /********************************************************/
 
 
-#ifndef EXTI_CONFIG_H_
-#define EXTI_CONFIG_H_
+#ifndef GIE_INTERFACE_H_
+#define GIE_INTERFACE_H_
 
-typedef struct
-{
-	u8  EXTI_u8State;
-	u8  EXTI_u8SenseLevel;
-}EXTI_t;
 
-#define   NUMBER_OF_INTERRUPT_PINS     3
+ES_t   GIE_enuEnable(void);
 
+ES_t   GIE_enuDisable(void);
 
 #endif

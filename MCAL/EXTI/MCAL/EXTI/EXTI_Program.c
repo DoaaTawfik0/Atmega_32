@@ -1,33 +1,32 @@
-/********************************************************/
-/********************************************************/
-/**************   Author: Doaa Tawfik     ***************/
-/**************   Layer:  MCAL            ***************/
-/**************   SWC:    EXTI            ***************/
-/**************   Version: 1.00           ***************/
-/********************************************************/
-/********************************************************/
+/******************************************************/
+/******************************************************/
+/**************   Author: Doaa Tawfik   ***************/
+/**************   Layer:  MCAL          ***************/
+/**************   SWC:    EXTI          ***************/
+/**************   Version: 2.00         ***************/
+/******************************************************/
+/******************************************************/
 
+#include  "../../LIB/STD_TYPES.h"
+#include  "../../LIB/ERROR_STATE.h"
+#include  "../../LIB/BIT_MATH.h"
 
+#include  "EXTI_Interface.h"
+#include  "EXTI_Config.h"
+#include  "EXTI_Private.h"
+#include  "EXTI_Register.h"
 
-#include "STD_TYPES.h"
-#include "ERROR_STATE.h"
-#include "BIT_MATH.h"
+#include  "../Interrupt.h"
 
-#include "EXTI_Register.h"
-#include "EXTI_Private.h"
-#include "EXTI_Config.h"
-#include "EXTI_Interface.h"
+/*****************************************************************************/
+/*                       Glopal Variables                                    */
+/*****************************************************************************/
 
-#include "Interrupt.h"
-
-
-/*
- * Creating Global Pointer To Function To use in Call_Back Function
- * EXTI_ApFunINTFun >> INTFun is an array of pointer to function
- */
-static volatile void (* EXTI_ApFunINTFun[3])(void) = {NULL , NULL , NULL};
-
-
+static volatile void (*EXTI_GpfunISRFun[EXTI_NUM]) (void*) = {NULL , NULL , NULL};
+static volatile void (*EXTI_GpISRPara[EXTI_NUM]) = {NULL , NULL , NULL};
+/*****************************************************************************/
+/*                       End of Glopal Variables                             */
+/*****************************************************************************/
 
 
 /*****************************************************************************/
@@ -48,9 +47,9 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 	if(Copy_pstrEXTIConfig != NULL)
 	{
 		/*Iterate on AstrEXTIConfig to check which interrupt pin is activated & initialize it*/
-		for(Local_u8Iterator = 0 ; Local_u8Iterator < NUMBER_OF_INTERRUPT_PINS ; Local_u8Iterator++)
+		for(Local_u8Iterator = 0 ; Local_u8Iterator < EXTI_NUM ; Local_u8Iterator++)
 		{
-			if(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_u8State == ACTIVATED)
+			if(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_STATE == ACTIVATED)
 			{
 				switch(Local_u8Iterator)
 				{
@@ -65,24 +64,24 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 					SET_BIT(GICR , GICR_INT0);
 
 					/*Choosing Interrupt Sense Control for INT0*/
-					switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_u8SenseLevel)
+					switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_SENSE_LEVEL)
 					{
-					case FALLING_EDGE:
+					case EXTI_FALLING_EDGE:
 						SET_BIT(MCUCR , MCUCR_ISC01);
 						CLEAR_BIT(MCUCR , MCUCR_ISC00);
 						Local_enuErrorState = ES_OK;
 						break;
-					case RISING_EDGE:
+					case EXTI_RISING_EDGE:
 						SET_BIT(MCUCR , MCUCR_ISC01);
 						SET_BIT(MCUCR , MCUCR_ISC00);
 						Local_enuErrorState = ES_OK;
 						break;
-					case ANY_LOGICAL_CHANGE:
+					case EXTI_ON_CHANGE:
 						CLEAR_BIT(MCUCR , MCUCR_ISC01);
 						SET_BIT(MCUCR , MCUCR_ISC00);
 						Local_enuErrorState = ES_OK;
 						break;
-					case LOW_LEVEL:
+					case EXTI_LOW_LEVEL:
 						CLEAR_BIT(MCUCR , MCUCR_ISC01);
 						CLEAR_BIT(MCUCR , MCUCR_ISC00);
 						Local_enuErrorState = ES_OK;
@@ -103,24 +102,24 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 						SET_BIT(GICR , GICR_INT1);
 
 						/*Choosing Interrupt Sense Control for INT1*/
-						switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_u8SenseLevel)
+						switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_SENSE_LEVEL)
 						{
-						case FALLING_EDGE:
+						case EXTI_FALLING_EDGE:
 							SET_BIT(MCUCR , MCUCR_ISC11);
 							CLEAR_BIT(MCUCR , MCUCR_ISC10);
 							Local_enuErrorState = ES_OK;
 							break;
-						case RISING_EDGE:
+						case EXTI_RISING_EDGE:
 							SET_BIT(MCUCR , MCUCR_ISC11);
 							SET_BIT(MCUCR , MCUCR_ISC10);
 							Local_enuErrorState = ES_OK;
 							break;
-						case ANY_LOGICAL_CHANGE:
+						case EXTI_ON_CHANGE:
 							CLEAR_BIT(MCUCR , MCUCR_ISC11);
 							SET_BIT(MCUCR , MCUCR_ISC10);
 							Local_enuErrorState = ES_OK;
 							break;
-						case LOW_LEVEL:
+						case EXTI_LOW_LEVEL:
 							CLEAR_BIT(MCUCR , MCUCR_ISC11);
 							CLEAR_BIT(MCUCR , MCUCR_ISC10);
 							Local_enuErrorState = ES_OK;
@@ -136,13 +135,13 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 							SET_BIT(GICR , GICR_INT2);
 
 							/*Choosing Interrupt Sense Control for INT2*/
-							switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_u8SenseLevel)
+							switch(Copy_pstrEXTIConfig[Local_u8Iterator].EXTI_SENSE_LEVEL)
 							{
-							case FALLING_EDGE:
+							case EXTI_FALLING_EDGE:
 								CLEAR_BIT(MCUCSR , MCUCSR_ISC2);
 								Local_enuErrorState = ES_OK;
 								break;
-							case RISING_EDGE:
+							case EXTI_RISING_EDGE:
 								SET_BIT(MCUCSR , MCUCSR_ISC2);
 								Local_enuErrorState = ES_OK;
 								break;
@@ -152,11 +151,8 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 							break;
 							default:
 								Local_enuErrorState = ES_OUT_OF_RANGE;
-
 				}
-
 			}
-
 		}
 	}
 	else
@@ -167,45 +163,46 @@ ES_t  EXTI_enuInitialize(EXTI_t *Copy_pstrEXTIConfig)
 	return   Local_enuErrorState;
 }
 
+
+
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : EXTI_enuSetSenseMode.                                 **/
+/** Function Name   : EXTI_enuChangeSenseLevel.                             **/
 /** Return Type     : Error_State.                                          **/
 /** Arguments       : Copy_u8EXTI_ID , Copy_u8SenseLevel.                   **/
 /** Functionality   : SET Sense Mode For EXTI                               **/
 /*****************************************************************************/
 /*****************************************************************************/
 
-ES_t  EXTI_enuSetSenseMode(u8 Copy_u8EXTI_ID , u8 Copy_u8SenseLevel)
-
+ES_t  EXTI_enuChangeSenseLevel(u8 Copy_u8EXTI_ID , u8 Copy_u8SenseLevel)
 {
 	ES_t  Local_enuErrorState = ES_NOK;
 
-	if((Copy_u8EXTI_ID >= 0) &&(Copy_u8EXTI_ID < 3))
+	if((Copy_u8EXTI_ID >=0) && (Copy_u8EXTI_ID < 3))
 	{
 		switch(Copy_u8EXTI_ID)
 		{
 		case 0:
-
-			/*Choosing Interrupt Sense Control for INT0*/
+			/*Setting Interrupt Sense Control for INT0*/
 			switch(Copy_u8SenseLevel)
 			{
-			case FALLING_EDGE:
+
+			case EXTI_FALLING_EDGE:
 				SET_BIT(MCUCR , MCUCR_ISC01);
 				CLEAR_BIT(MCUCR , MCUCR_ISC00);
 				Local_enuErrorState = ES_OK;
 				break;
-			case RISING_EDGE:
+			case EXTI_RISING_EDGE:
 				SET_BIT(MCUCR , MCUCR_ISC01);
 				SET_BIT(MCUCR , MCUCR_ISC00);
 				Local_enuErrorState = ES_OK;
 				break;
-			case ANY_LOGICAL_CHANGE:
+			case EXTI_ON_CHANGE:
 				CLEAR_BIT(MCUCR , MCUCR_ISC01);
 				SET_BIT(MCUCR , MCUCR_ISC00);
 				Local_enuErrorState = ES_OK;
 				break;
-			case LOW_LEVEL:
+			case EXTI_LOW_LEVEL:
 				CLEAR_BIT(MCUCR , MCUCR_ISC01);
 				CLEAR_BIT(MCUCR , MCUCR_ISC00);
 				Local_enuErrorState = ES_OK;
@@ -216,26 +213,25 @@ ES_t  EXTI_enuSetSenseMode(u8 Copy_u8EXTI_ID , u8 Copy_u8SenseLevel)
 			}
 			break;
 			case 1:
-
-				/*Choosing Interrupt Sense Control for INT1*/
+				/*Setting Interrupt Sense Control for INT1*/
 				switch(Copy_u8SenseLevel)
 				{
-				case FALLING_EDGE:
+				case EXTI_FALLING_EDGE:
 					SET_BIT(MCUCR , MCUCR_ISC11);
 					CLEAR_BIT(MCUCR , MCUCR_ISC10);
 					Local_enuErrorState = ES_OK;
 					break;
-				case RISING_EDGE:
+				case EXTI_RISING_EDGE:
 					SET_BIT(MCUCR , MCUCR_ISC11);
 					SET_BIT(MCUCR , MCUCR_ISC10);
 					Local_enuErrorState = ES_OK;
 					break;
-				case ANY_LOGICAL_CHANGE:
+				case EXTI_ON_CHANGE:
 					CLEAR_BIT(MCUCR , MCUCR_ISC11);
 					SET_BIT(MCUCR , MCUCR_ISC10);
 					Local_enuErrorState = ES_OK;
 					break;
-				case LOW_LEVEL:
+				case EXTI_LOW_LEVEL:
 					CLEAR_BIT(MCUCR , MCUCR_ISC11);
 					CLEAR_BIT(MCUCR , MCUCR_ISC10);
 					Local_enuErrorState = ES_OK;
@@ -246,15 +242,14 @@ ES_t  EXTI_enuSetSenseMode(u8 Copy_u8EXTI_ID , u8 Copy_u8SenseLevel)
 				}
 				break;
 				case 2:
-
-					/*Choosing Interrupt Sense Control for INT2*/
+					/*Setting Interrupt Sense Control for INT2*/
 					switch(Copy_u8SenseLevel)
 					{
-					case FALLING_EDGE:
+					case EXTI_FALLING_EDGE:
 						CLEAR_BIT(MCUCSR , MCUCSR_ISC2);
 						Local_enuErrorState = ES_OK;
 						break;
-					case RISING_EDGE:
+					case EXTI_RISING_EDGE:
 						SET_BIT(MCUCSR , MCUCSR_ISC2);
 						Local_enuErrorState = ES_OK;
 						break;
@@ -272,7 +267,7 @@ ES_t  EXTI_enuSetSenseMode(u8 Copy_u8EXTI_ID , u8 Copy_u8SenseLevel)
 		Local_enuErrorState = ES_OUT_OF_RANGE;
 	}
 
-	return   Local_enuErrorState;
+	return Local_enuErrorState;
 }
 
 
@@ -365,49 +360,72 @@ ES_t  EXTI_enuDisableInterrupt(u8 Copy_u8EXTI_ID)
 	return   Local_enuErrorState;
 }
 
-ES_t  EXTI_enuCallBack(void(*Copy_pFunAPPFun)(void) , u8  Copy_u8EXTI_ID)
+
+/*************************************************************************************************************/
+/*************************************************************************************************************/
+/** Function Name   : EXTI_enuCallBackFunction.                                                             **/
+/** Return Type     : Error_State.                                                                          **/
+/** Arguments       : Copy_pfunAppFun , Copy_pFunParameter.                                                 **/
+/** Functionality   : Used to call Function from upper layer                                                **/
+/** this function take pointer to function(argument of this function is generic pointer & it returns void)  **/
+/** & take also generic pointer                              **/
+/*************************************************************************************************************/
+/*************************************************************************************************************/
+
+ES_t  EXTI_enuCallBackFunction(volatile void (*Copy_pfunAppFun) (void*) , volatile void (*Copy_PvidAppParameter) , u8  Copy_u8EXTI_ID)
 {
 	ES_t Local_enuErrorState = ES_NOK;
 
-	if(Copy_pFunAPPFun != NULL && Copy_u8EXTI_ID >= 0 && Copy_u8EXTI_ID < 3)
+	if((Copy_pfunAppFun != NULL) && (Copy_u8EXTI_ID >= 0) && (Copy_u8EXTI_ID < EXTI_NUM))
 	{
-		EXTI_ApFunINTFun[Copy_u8EXTI_ID] = Copy_pFunAPPFun;
+		EXTI_GpfunISRFun[Copy_u8EXTI_ID] = Copy_pfunAppFun;
+		EXTI_GpISRPara[Copy_u8EXTI_ID] = Copy_PvidAppParameter;
 		Local_enuErrorState = ES_OK;
+	}
+	else
+	{
+		if(Copy_pfunAppFun == NULL)
+		{
+			Local_enuErrorState = ES_NULL_POINTER;
+		}
+		else
+		{
+			Local_enuErrorState = ES_OUT_OF_RANGE;
+		}
 	}
 
 	return  Local_enuErrorState;
 }
 
-
-/*ISR Function For Interrupt 0*/
+/*************************************************************************************************************/
+/*                                ISR For External Interrupt Zero                                            */
+/*************************************************************************************************************/
 ISR(VECT_INT0)
 {
-	if(EXTI_ApFunINTFun[0] != NULL)
+	if(EXTI_GpfunISRFun[0] != NULL)
 	{
-		EXTI_ApFunINTFun[0]();
+		EXTI_GpfunISRFun[0]((u8*)EXTI_GpISRPara[0]);
 	}
-
 }
 
-/*ISR Function For Interrupt 1*/
+/*************************************************************************************************************/
+/*                                ISR For External Interrupt One                                             */
+/*************************************************************************************************************/
 ISR(VECT_INT1)
 {
-	if(EXTI_ApFunINTFun[1] != NULL)
+	if(EXTI_GpfunISRFun[1] != NULL)
 	{
-		EXTI_ApFunINTFun[1]();
+		EXTI_GpfunISRFun[1]((u8*)EXTI_GpISRPara[1]);
 	}
 }
 
-/*ISR Function For Interrupt 2*/
+/*************************************************************************************************************/
+/*                                ISR For External Interrupt Two                                             */
+/*************************************************************************************************************/
 ISR(VECT_INT2)
 {
-	if(EXTI_ApFunINTFun[2] != NULL)
+	if(EXTI_GpfunISRFun[2] != NULL)
 	{
-		EXTI_ApFunINTFun[2]();
+		EXTI_GpfunISRFun[2]((u8*)EXTI_GpISRPara[2]);
 	}
-
 }
-
-
-
-
