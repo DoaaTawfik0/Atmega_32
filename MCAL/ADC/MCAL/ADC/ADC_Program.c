@@ -218,8 +218,8 @@ ES_t  ADC_enuAsynchAnalogRead(u8 Copy_u8ChannelID , volatile void(*Copy_pfunNoti
 /** Functionality   : Reading Analog Value With Using Polling                                           **/
 /*This Function take channel ID to select which Channel We're Working on                                **/
 /*This Function take Pointer to u16 variable to return value of ADC On it                               **/
-/********************************************************************************************************/
-/********************************************************************************************************/
+/*********************************************************************************************************/
+/*********************************************************************************************************/
 
 ES_t  ADC_enuSynchAnalogRead(u8 Copy_u8ChannelID , u16* Copy_pu16Value)
 {
@@ -242,6 +242,36 @@ ES_t  ADC_enuSynchAnalogRead(u8 Copy_u8ChannelID , u16* Copy_pu16Value)
 
 		/*Reading ADC Value From ADCL&ADCH*/
 		Local_enuErrorState |= ADC_enuReadData(Copy_pu16Value);
+	}
+	else
+	{
+		Local_enuErrorState = ES_NULL_POINTER;
+	}
+
+	return Local_enuErrorState;
+
+}
+
+
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+/** Function Name   : ADC_enuGetAnalogValue.                                                            **/
+/** Return Type     : Error_State enum.                                                                 **/
+/** Arguments       : Copy_u16DigitalValue , Copy_pu16ReturnValue                                       **/
+/** Functionality   : Reading Analog Voltage in mv                                                      **/
+/*This Function take digital value which ADC Read & pointer to variable to return analog voltage on it   */
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+
+ES_t  ADC_enuGetAnalogValue(u16 Copy_u16DigitalValue , u16* Copy_pu16ReturnValue)
+{
+
+	ES_t  Local_enuErrorState = ES_NOK;
+
+	if(Copy_pu16ReturnValue != NULL)
+	{
+		*Copy_pu16ReturnValue = (u16)(((u32)Copy_u16DigitalValue*5000UL)/1024UL);
+		Local_enuErrorState = ES_OK;
 	}
 	else
 	{
