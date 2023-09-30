@@ -16,6 +16,7 @@
 #include  "CLCD_Private.h"
 
 #include  "util/delay.h"
+
 /********************************************************************/
 /*                 ProtoTypes fo Static Functions                  */
 /*******************************************************************/
@@ -250,6 +251,55 @@ ES_t CLCD_enuWriteNumber(u32 Copy_u32Number)
 	{
 		Local_u32rev_num = ((Local_u32rev_num*10) + (Copy_u32Number%10));
 		Copy_u32Number /= 10;
+	}
+
+	while(Local_u32rev_num != 1)
+	{
+		Local_enuErrorState |= CLCD_InenuSendCharacter((Local_u32rev_num%10)+'0');
+		Local_u32rev_num /= 10;
+	}
+
+	return Local_enuErrorState;
+}
+
+
+/*****************************************************************************/
+/*****************************************************************************/
+/** Function Name   : CLCD_enuWritFloateNumber.                             **/
+/** Return Type     : Error_State.                                          **/
+/** Arguments       : Copy_f32FloatNumber                                   **/
+/** Functionality   : Write any float number on lcd                         **/
+/*****************************************************************************/
+/*****************************************************************************/
+
+ES_t CLCD_enuWritFloateNumber(f32 Copy_f32FloatNumber)
+{
+	ES_t Local_enuErrorState = ES_NOK;
+	u32  Local_u32IntegerPart , Local_u32DecimalPart;
+	u32  Local_u32rev_num = 1;
+
+	Local_u32IntegerPart = (u32)Copy_f32FloatNumber;
+	Local_u32DecimalPart = (u32)((Copy_f32FloatNumber - Local_u32IntegerPart)*100);
+
+	while(Local_u32IntegerPart != 0)
+	{
+		Local_u32rev_num = ((Local_u32rev_num*10) + (Local_u32IntegerPart%10));
+		Local_u32IntegerPart /= 10;
+	}
+
+	while(Local_u32rev_num != 1)
+	{
+		Local_enuErrorState |= CLCD_InenuSendCharacter((Local_u32rev_num%10)+'0');
+		Local_u32rev_num /= 10;
+	}
+
+	CLCD_enuSendCharacter('.');
+	Local_u32rev_num = 1;
+
+	while(Local_u32DecimalPart != 0)
+	{
+		Local_u32rev_num = ((Local_u32rev_num*10) + (Local_u32DecimalPart%10));
+		Local_u32DecimalPart /= 10;
 	}
 
 	while(Local_u32rev_num != 1)
